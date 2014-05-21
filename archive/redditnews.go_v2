@@ -1,0 +1,49 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+)
+
+type Item struct {
+	Author string `json:"author"`
+	Score  int    `json:"score"`
+	URL    string `json:"url"`
+	Title  string `json:"title"`
+}
+
+type response struct {
+	Data struct {
+		Children []struct {
+			Data Item
+		}
+	}
+}
+
+func main() {
+	resp, err := http.Get("http://reddit.com/r/golang.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Fatal(resp.Status)
+	}
+
+	r := new(response)
+	err = json.NewDecoder(resp.Body).Decode(r)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, child := range r.Data.Children {
+		fmt.Println(child.Data.Author)
+		fmt.Println(child.Data.Score)
+		fmt.Println(child.Data.URL)
+		fmt.Println(child.Data.Title)
+	}
+
+}
